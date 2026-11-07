@@ -3,12 +3,24 @@ require('dotenv').config();
 const express     = require('express');
 const bodyParser  = require('body-parser');
 const cors        = require('cors');
+const helmet      = require('helmet');
+const mongoose    = require('mongoose');
 
 const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
 const runner            = require('./test-runner');
 
 const app = express();
+
+// Security (tests 2, 3, 4) - must come BEFORE static files and routes
+app.use(helmet.frameguard({ action: 'sameorigin' }));
+app.use(helmet.dnsPrefetchControl({ allow: false }));
+app.use(helmet.referrerPolicy({ policy: 'same-origin' }));
+
+// Database
+mongoose.connect(process.env.DB || 'mongodb://127.0.0.1:27017/messageboard')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err.message));
 
 app.use('/public', express.static(process.cwd() + '/public'));
 
@@ -58,7 +70,7 @@ const listener = app.listen(process.env.PORT || 3000, function () {
         console.log('Tests are not valid:');
         console.error(e);
       }
-    }, 1500);
+    }, 3500);
   }
 });
 

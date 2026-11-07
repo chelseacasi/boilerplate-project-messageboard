@@ -73,8 +73,14 @@ module.exports = function (app) {
     });
   });
   app.get('/_api/app-info', function(req, res) {
-    res.json({ headers: res.getHeaders()});
-  });
+  const headers = res.getHeaders();
+  const hObj = {};
+  Object.keys(headers)
+    .filter(h => !h.match(/^access-control-\w+/))
+    .forEach(h => { hObj[h] = headers[h]; });
+  delete hObj['strict-transport-security'];
+  res.json({ headers: hObj });
+});
   
 };
 
